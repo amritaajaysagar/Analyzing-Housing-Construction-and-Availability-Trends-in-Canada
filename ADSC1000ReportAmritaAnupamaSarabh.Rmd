@@ -1,0 +1,907 @@
+---
+title: "Analyzing Housing Construction and Availability Trends in Canada"
+author:
+  - "Amrita Ajay Sagar (T00733775)"
+  - "Anupama Chalil Velluva (T00728437)"
+  - "Sarab Nidhaan Singh (T00735745)"
+date: "2023-11-28"
+output:
+  pdf_document: 
+     
+     toc: true
+     toc_depth: 1
+     number_sections: true
+     
+  html_document:
+    
+    toc: true
+    toc_float: true
+---
+
+\newpage
+\maketitle
+\thispagestyle{empty}
+\clearpage
+ 
+
+ 
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(stringr)
+library(ggplot2)
+library(EnvStats)
+if(!require(BSDA)) install.packages("BSDA")
+library(BSDA)
+if(!require(DescTools)) install.packages("DescTools")
+library(DescTools)
+if(!require(EnvStats)) install.packages("EnvStats")
+library(EnvStats)
+library(tidyr)
+library(knitr)
+```
+
+
+
+# Introduction
+
+## Background
+This project aims to examine the trends and patterns of housing construction and availability in Canada, using data from 2009 to 2022. The data is obtained from Statistics Canada, a reliable source of official statistics on various aspects of the country. The data allows us to explore the complex interplay between the supply and demand of housing units.
+
+## Objectives
+Investigate housing construction trends from 2009 to 2022.
+Analyze housing availability patterns during the same period.
+Identify correlations between housing construction rates and housing availability.
+Explore regional variations in construction and availability trends.  
+
+## Our Initial Hypotheses  
+
+Before starting our data analysis, we have formulated hypotheses grounded in our general knowledge and interest in the housing construction and availability landscape in Canada. These hypotheses serve as a guiding framework for our exploration:
+
+**Hypothesis 1:** Correlation Between Housing Construction Rates and Availability
+
+Intuition: We hypothesize that there is a significant correlation between housing construction rates and the availability of houses. In essence, an increase in the number of houses constructed per year will correspond to a higher availability of housing for residents.
+Approach: We aim to quantify and visualize the linear relationship between these variables using a correlation test and a scatter plot.
+
+**Hypothesis 2:** Regional Variations in Construction and Availability Trends
+
+Intuition: We assume that different regions in Canada exhibit distinct patterns in housing construction and availability. These variations may be influenced by factors such as population dynamics, economic conditions, climate, and cultural differences.
+Approach: Our strategy involves comparing and contrasting mean values and trends of housing construction and availability across different regions. This will be accomplished using group comparison tests and visual representations such as line plots or bar plots.
+
+**Regional Focus**  
+
+In this study, we concentrate on five regions:
+
+Canada: Our overarching focus.
+British Columbia: Our current residence and a province of primary interest.
+Alberta: Adjacent to British Columbia.
+Ontario: A high-demand province among international students and migrants, hosting the national capital.
+Nova Scotia: An Atlantic Province, expecting potential housing demand disparities compared to other provinces and the country.
+
+**Context-specific explanation**  
+While acknowledging that housing availability in Canada is influenced by a myriad of factors, including migration, population growth, and resource availability, our study focuses specifically on the number of houses under construction in a given year within a region. We seek to explore the correlation between the annual construction of houses and the number of available houses in a region in a given year. This narrow focus allows us to delve into the specific dynamics of construction rates and their potential impact on housing availability.
+
+
+# Data Collection  
+
+## Data Source
+
+This project relies on information from Statistics Canada, a reliable source for official data about Canada. Statistics Canada gathers and studies information on the country’s economy, society, and environment through surveys, censuses, and other records. This data is accessible to the public on the Statistics Canada website. Statistics Canada also collects data from other sources, such as the Canada Mortgage and Housing Corporation (CMHC), which is a federal agency that provides housing market analysis and funding for affordable housing. The housing construction data set that we use in this project was obtained from the CMHC through Statistics Canada. This data set contains information on the number of houses under construction in different regions of Canada from 2016 to 2023.
+
+## Variables
+
+The variables for the housing availability data set are:
+
+**- DGUID:** This is a unique identifier for each geographic location in the data set. It consists of a four-digit code that represents the year, followed by a letter and a number that indicate the level and the name of the location. For example, 2016A00001 means the year 2016, level A (Canada), and location 00001 (Canada).  
+
+**- YEAR:** This is a variable that indicates the year of the data. It ranges from 2016 to 2023, with one observation per year for each geographic location.  
+
+**- GEO:** This is a variable that indicates the geographic location of the data. It has six levels: Canada, Alberta, British Columbia, Nova Scotia, Ontario, and Quebec. Each level has a corresponding DGUID code.  
+
+**- Dwelling.Occupation:** This is a variable that indicates the occupation status of the private dwellings in the data. It has four subcategories:   **Private_dwellings_occupied_by_usual_residents**, **Private_dwellings_occupied_by_non-usual_residents**, **Private_dwellings_unoccupied**, and **Total_private_dwellings**. The first three subcategories are mutually exclusive and add up to the fourth subcategory. A usual resident is a person who lives in the dwelling and considers it as his or her main residence. A non-usual resident is a person who lives in the dwelling but does not consider it as his or her main residence. An unoccupied dwelling is a dwelling that is vacant.  
+
+**- VALUE:** This is a variable that indicates the count of housing units in the data. It is a numeric variable that shows the number of private dwellings in each subcategory of Dwelling.Occupation for each geographic location and year.
+
+The variables for the housing construction data set are:
+
+**- DGUID:** This is a unique identifier for each geographic location in the data set. It consists of a four-digit code that represents the year, followed by a letter and a number that indicate the level and the name of the location.   
+
+**- YEAR:** This is a variable that indicates the year of the data. It ranges from 2016 to 2023, with one observation per year for each geographic location.  
+
+**- GEO:** This is a variable that indicates the geographic location of the data. It has six levels: Canada, Alberta, British Columbia, Nova Scotia, Ontario, and Quebec. Each level has a corresponding DGUID code.  
+
+**- VALUE:** This is a variable that indicates the count of housing units under construction in the data. It is a numeric variable that shows the number of houses that are being built or are in the process of being built for each geographic location and year.
+
+# Methodology  
+
+## Data Cleaning  
+
+For the meticulous process of cleaning and preparing the data for analysis, we adhered to a concise yet comprehensive approach. Our initial steps encompassed loading datasets, meticulously examining their structures, and subsequently finalizing the necessary columns through decision-making aligned with our project objectives. A critical aspect of this process involved ensuring correct data types and diligently eliminating duplicates. 
+
+Another aspect of data cleaning that we considered was the presence or absence of null values in the data. Fortunately, we did not encounter any null values in our data sets, which made our task easier and more efficient. However, we did face a challenge in choosing only the essential columns of interest to avoid the project from becoming too complicated. We had to decide which variables were relevant and which ones were redundant or unnecessary for our analysis. The intentional omission of non-essential columns not only streamlined our analysis but also served as a valuable learning outcome. This selective approach compelled us to stay focused on the end goal, emphasizing the importance of scrutinizing data through the lens of our analysis requirements. 
+
+As a result, the final check affirmed the cleanliness, consistency, and readiness of the data for subsequent statistical analysis
+
+
+
+
+# Statistical Methods
+
+In this section, we detail the steps undertaken in data preparation and transformation for subsequent statistical analyses.
+
+## 1. Data Loading
+
+**Objective:** Import the dataset into the analysis environment.
+
+**Steps:**
+- Loaded the dataset from Statistics Canada into the analytical platform.
+
+Find the code for data loading in [this code chunk](#load_the_data)  
+```{r ,label="load_the_data",echo=FALSE,results='hide'}
+
+HS_UndrConstr<-read.csv("C:\\Users\\Sarat\\OneDrive - Thompson Rivers University\\ADSC1000 STATICTICAL DATA ANALYSIS\\Project Stat\\HousingUnderConstrcBC_ON_AL_NS_Canada.csv")
+head((HS_UndrConstr))
+
+HS_Availability<-read.csv("Housing_AvailabilityWithoutDT.csv")
+head(HS_Availability)
+
+#Comparing both data sets for primary key
+unique(HS_Availability$DGUID)
+unique(HS_UndrConstr$DGUID)
+
+
+summary(HS_Availability)
+summary(HS_UndrConstr)
+
+dim(HS_Availability)
+
+```
+
+## 2. Time Period Adjustment
+
+**Objective:** Align the dataset with our analysis timeframe (from quarters to years).
+
+**Steps:**
+- Recognized that the original data was in quarters and aggregated it to create yearly datasets for a more comprehensive analysis.
+
+Find the code for data loading in [this code chunk](#QtrlyToYears)
+
+```{r label="QtrlyToYears",echo=FALSE,results='hide'}
+HS_Availability$YEAR<-as.numeric(str_sub(HS_Availability$REF_DATE, start = 1, end = 4))
+
+HS_UndrConstr$YEAR<-as.numeric(str_sub(HS_UndrConstr$REF_DATE, start = 1, end = 4))
+
+# colnames(HS_UndrConstr)["VALUE"] <- "HOUSES_PER_YEAR"
+# colnames(HS_UndrConstr)[colnames(merged_data) == "old_name"] <- "new_name"
+```
+
+
+
+
+## 3. Column Filtering and Selection
+
+**Objective:** Narrow down the dataset to only include columns crucial for our analysis.
+
+**Steps:**
+- Identified and selected columns that were of primary interest for our research questions.
+- Combined and filtered the dataset to retain only the essential variables.
+
+Find the code for Columns Selection in [this code chunk](#ChooseColumns)
+
+```{r ChooseColumns,echo=FALSE,results='hide'}
+#Selecting the needed columns
+HS_UndrConstr<-HS_UndrConstr %>%
+  group_by(DGUID,YEAR,GEO ) %>% summarize(VALUE = sum(VALUE, na.rm = TRUE))
+
+head(HS_UndrConstr)
+
+#Selecting the needed columns
+HS_Availability <- HS_Availability %>%
+  group_by(DGUID,YEAR,GEO, Dwelling.Occupation) %>% summarize(VALUE = sum(VALUE, na.rm = TRUE))
+
+names(HS_Availability)
+```
+
+
+## 4. Wide Format Transformation for Construction Data
+
+**Objective:** Facilitate a clearer observation of housing construction trends over the years.
+
+**Steps:**
+- Transformed the housing construction data into a wide format for improved visualization.
+- This step provided an overview of the variation in housing construction rates across different regions over the years.
+
+Find the code for spreading Construction Data to wide format in [this code chunk][#reshapeConstr]
+
+```{r reshapeConstr,echo=FALSE,results='hide'}
+
+# reshape the data from long to wide format 
+HS_UndrConstr_wide <- spread(HS_UndrConstr, key = YEAR, value =VALUE)
+
+
+```
+
+```{r,echo=FALSE}
+HS_UndrConstr_wide
+```
+
+
+Upon viewing the House Construction trend over the years, it is evident from the table that the rate of construction is increasing,that is more number of houses are being constructed every year in all the provinces.Although there are ups and downs in Alberta and BC,the general trend is upwards. Also the variation of the rate over provinces is also evident,Ontario showing the maximum and Nova Scotia the minimum.
+
+## 5. Regional Split for Availability Data
+
+**Objective:** Analyze housing availability patterns across different regions.
+
+**Steps:**
+- Segregated the housing availability data by regions to conduct focused regional analyses.
+- This division allowed for a nuanced examination of how housing availability varies across different provinces.
+
+Find the code for Splitting Housing Availability Data by region in [this code chunk](#SplitAvailByRegion)
+
+```{r label="SplitAvailByRegion",echo=FALSE,results='hide'}
+HS_Availability$GEO <- as.factor(HS_Availability$GEO)
+
+# Split the data based on 'GEO'
+split_data <- split(HS_Availability, HS_Availability$GEO)
+
+# Access individual subsets
+HS_Avail_Can <- split_data$"Canada"
+HS_Avail_BC <- split_data$"British Columbia"
+HS_Avail_Alb <- split_data$"Alberta"
+HS_Avail_ON <- split_data$"Ontario"
+HS_Avail_NS <-split_data$"Nova Scotia"
+
+HS_Avail_Can
+HS_Avail_BC
+HS_Avail_Alb
+HS_Avail_ON
+HS_Avail_NS
+
+```
+
+
+
+
+
+## 6. Dwelling Occupation Data Transformation
+
+**Objective:** Isolate unoccupied houses for detailed analysis.
+
+**Steps:**
+- Developed a function to spread the dataset by Dwelling Occupation, to focus on unoccupied houses.
+- Applied this function individually to each of the five regions, ensuring consistency in data processing.
+
+Find the code for this in [this code chunk](#SpreadDatabyDwellingOccupation)
+
+
+```{r label="SpreadDatabyDwellingOccupation",echo=FALSE,results='hide'}
+
+#Define a function to spread data set by Dwelling Occupation to get Unoccupied Houses.
+
+HS_AvailbyDO_TotalDwellingType <- function(data) {
+ data <- data %>%
+    spread(key = "Dwelling.Occupation", value = "VALUE")
+  
+ colnames(data) <- gsub(" ", "_", colnames(data))
+ #rename the column names for easy access
+  
+ return(data)
+}
+
+# Use the function with all the provinces separately and the Availability dataframe all together
+HS_Avail_BC_widebyDO_TotalDwellingType<-HS_AvailbyDO_TotalDwellingType(HS_Avail_BC)
+HS_Avail_BC_widebyDO_TotalDwellingType
+HS_Avail_NS_widebyDO_TotalDwellingType<-HS_AvailbyDO_TotalDwellingType(HS_Avail_NS)
+HS_Avail_NS_widebyDO_TotalDwellingType
+HS_Avail_ON_widebyDO_TotalDwellingType<-HS_AvailbyDO_TotalDwellingType(HS_Avail_ON)
+HS_Avail_ON_widebyDO_TotalDwellingType
+HS_Avail_Alb_widebyDO_TotalDwellingType<-HS_AvailbyDO_TotalDwellingType(HS_Avail_Alb)
+HS_Avail_Alb_widebyDO_TotalDwellingType
+HS_Avail_Can_widebyDO_TotalDwellingType<-HS_AvailbyDO_TotalDwellingType(HS_Avail_Can)
+HS_Avail_Can_widebyDO_TotalDwellingType
+
+HS_Availability_TOTOcc<-HS_Availability %>% HS_AvailbyDO_TotalDwellingType()
+
+HS_Availability_TOTOcc 
+
+```
+## 7. Visualizing Housing Trends
+
+**Objective:** Illustrate housing trends over time through insightful visualizations.
+
+**Steps:**
+
+1. Plot the bar chart for Private Dwellings Unoccupied Over Time by Province and Country.
+2. Visualize House Construction Over Time by Province and Country using a bar chart.
+
+
+
+```{r label="BarAndLinePlots-unoccupied",echo =FALSE}
+
+ggplot(data = HS_Availability_TOTOcc, aes(x = YEAR, y = Private_dwellings_unoccupied,fill=YEAR)) +
+  geom_bar(stat = "identity") + facet_wrap(~ GEO) +scale_fill_viridis_c() +
+  labs(title = "Private Dwellings Unoccupied Over Time by Province and Country",
+       x = "Year",
+       y = "Private Dwellings Unoccupied",
+       fill = "Province") +
+  theme_minimal()
+
+
+
+```
+
+Analysing the bar-plot of Private Dwellings Unoccupied Over Time by Province and Country, we see that :
+Rising trend: The number of private dwellings unoccupied is increasing in all provinces and in Canada as a whole from 2016 to 2022.In BC it has come down slightly from 2021 to 2022
+
+```{r label="BarPlot-construction",echo =FALSE}
+ggplot(data = HS_UndrConstr, aes(x = YEAR, y = VALUE, fill =YEAR)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~ GEO) +
+  scale_fill_viridis_c() +  # Use viridis color scale
+  labs(title = "House Construction Over Time by Province and Country",
+       x = "Year",
+       y = "Value",
+       fill = "Year") +
+  theme_minimal()
+
+
+
+```
+
+
+As it was evident from the table before, upon viewing bar-plot of the House Construction Over Time by Province and Country, we can see that the rate of construction is increasing,that is more number of houses are being constructed every year in all the provinces.Although there are ups and downs in Alberta and BC,the general trend is upwards. Also the variation of the rate over provinces is also evident,Ontario showing the maximum and Nova Scotia the minimum.
+
+
+
+
+
+## 8. Merging and Filtering Data for Comprehensive Analysis
+
+**Objective:** Combine housing availability and construction datasets to create a comprehensive dataset for in-depth analysis.
+
+**Steps:**
+
+1. Merge the wide-format dataset of housing availability by Dwelling Occupation of Canada with the wide-format dataset of housing construction based on the YEAR column.
+2. Filter the merged dataset to include only matching rows where the geographical location (GEO) in the housing availability dataset matches the GEO in the housing construction dataset.
+
+
+
+```{r label="mergingDatasets",echo=FALSE,results='hide'}
+
+merged_data <- merge(HS_Avail_Can_widebyDO_TotalDwellingType, HS_UndrConstr, by = "YEAR")
+merged_data<-merged_data %>% filter(GEO.x==GEO.y)
+merged_data
+
+```
+## 9. Hypothesis Testing 
+
+**Objective:** Assess the association between the number of houses constructed per year in Canada and the number of private dwellings occupied by usual residents using the Chi-Square test.
+
+**Steps:**
+
+1. **Formulate Null Hypothesis (H0):** The number of houses constructed per year in Canada is not associated with the number of private dwellings occupied by usual residents.
+2. **Formulate Alternative Hypothesis (H1):** There is a significant association between the number of houses constructed per year in Canada and the number of private dwellings occupied by usual residents.
+3. **Conduct Chi-Square Test :**
+
+
+
+### 9.2 Hypothesis Testing (Chi-Square Test) 
+
+```{r label="ChiSquareTesting", echo=FALSE,results='hide'}
+
+
+#ChiSquare Test
+chisquare_result <- chisq.test(table(merged_data$VALUE, merged_data$Private_dwellings_occupied_by_usual_residents))
+
+# Print Results
+
+print(chisquare_result)
+```
+In the Chi-Square test (Appendix A), we examined the association between the number of houses constructed per year in Canada and the number of private dwellings occupied by usual residents. The results, presented in Appendix A, indicate a p-value of 0.227 suggesting, we fail to reject the null hypothesis and we conclude that there is an association between the number of houses being constructed per year and the number of houses occupied by usual residents in Canada.
+
+
+
+
+
+
+### 9.3 Hypothesis Testing (Pearson's Correlation Coefficient Test) 
+
+**Objective:** Evaluate the association between the number of houses constructed per year in Canada and the number of private dwellings occupied by usual residents.
+
+**Steps:**
+
+1. **Formulate Null Hypothesis (H0):** The number of houses constructed per year in Canada is not associated with the number of private dwellings occupied by usual residents.
+
+2. **Formulate Alternative Hypothesis (H1):** There is a significant association between the number of houses constructed per year in Canada and the number of private dwellings occupied by usual residents.
+3. **Conduct Pearson's Correlation Coefficient Test:**
+   - Utilize the 'cor.test' function to assess the strength and direction of the association.
+4. **Validate Assumptions:**
+   - *Linearity:* Examine the scatter plot of the variables.
+   - *Normality:* Perform Shapiro-Wilk tests for normality on both 'VALUES' and 'Private_dwellings_occupied_by_usual_residents.'
+   - *Independence (Assumed)*
+   - *Homoscedasticity:* Check for constant variance through a residuals vs. fitted plot.
+
+
+
+```{r label="Hypothesistesting1", echo=FALSE,results='hide'}
+
+
+
+cor_coeff<-cor(merged_data$VALUE, merged_data$Private_dwellings_occupied_by_usual_residents)
+cat("Correlation Coeffecient=",cor_coeff)
+
+#Test Method: Pearson's correlation coefficient
+correlation_result <- cor.test(merged_data$VALUE, merged_data$Private_dwellings_occupied_by_usual_residents, method = "pearson")
+
+
+
+# Assumptions
+
+# 1. Linearity (next code chunk- fails there is definite pattern)
+# 2. Normality
+shapiro_test_values <- shapiro.test(merged_data$VALUE)
+shapiro_test_occupied <- shapiro.test(merged_data$Private_dwellings_occupied_by_usual_residents)
+
+
+print(correlation_result)
+
+
+
+```
+
+Correlation Test (Test code given in Appendix A)
+
+Pearson's correlation coefficient (r) is 0.6813.
+t-value is 2.0811 with 5 degrees of freedom.
+The p-value is 0.09193.
+The 95% confidence interval for the correlation is between -0.1474 and 0.9480.
+The null hypothesis (true correlation is equal to 0) is not rejected (p-value > 0.05). There is insufficient evidence to claim a significant correlation.
+
+Shapiro-Wilk Test for Normality:
+
+For the variable 'VALUES,' the p-value is 0.8014.
+For the variable 'Private_dwellings_occupied_by_usual_residents,' the p-value is 0.0009.
+The null hypothesis (data follows a normal distribution) is not rejected for 'VALUES,'
+The null hypothesis that the data follows normal distribution is rejected for 'Private_dwellings_occupied_by_usual_residents.' 
+
+In summary, the correlation analysis suggests a moderately positive correlation,but without significance and the normality assumption for 'Private_dwellings_occupied_by_usual_residents' is violated.
+
+
+
+
+
+
+
+### 9.4 Hypothesis Testing (T-Test)   
+
+**Objective:** Comparison of Housing Availability Between Canada and British Columbia
+**Steps:**
+
+1. **Formulate Null Hypothesis (H0):**The average housing availability in Canada is equal to that in British Columbia.
+
+2. **Formulate Alternative Hypothesis (H1):**The average housing availability in Canada is not equal to that in British Columbia.
+
+3. 3. **Conduct T-Test:**-[Code given in Appendix A]
+
+
+```{r label="T-test",echo=FALSE,results='hide'}
+# Perform t-test
+t_test_result <- t.test(HS_Avail_Can_widebyDO_TotalDwellingType$Private_dwellings_unoccupied, 
+                        HS_Avail_BC_widebyDO_TotalDwellingType$Private_dwellings_unoccupied,
+                        var.equal = TRUE)  # Assuming equal variances
+
+# Print the t-test result
+print(t_test_result) 
+```
+The mean housing availability in Canada is 4586568.4.
+The mean housing availability in British Columbia is 613281.1.
+Interpretation of t-test:
+The very low p-value = 1.106e-10 indicates strong evidence against the null hypothesis, suggesting that the average housing availability in Canada is significantly different from that in British Columbia. The confidence interval for the difference in means further supports this, as it does not include 0. The sample estimates of the means provide a sense of the magnitude of the difference, with Canada having a much higher mean housing availability compared to British Columbia.
+
+This observation matches our intuition, since, British Columbia as a well populated and in-demand province, will have less housing availability compared to other northern or atlantic provinces, which gets included when we consider Canada as a whole.
+
+
+
+Normality: The t-test assumes that the data is normally distributed. Conduct Shapiro-Wilk test for normality[Appendix A]
+```{r label="NormalityBCCANONOCCU",echo=FALSE,results='hide'}
+# Shapiro-Wilk test for normality
+shapiroCanUnOccu<-shapiro.test(HS_Avail_Can_widebyDO_TotalDwellingType$Private_dwellings_unoccupied)
+ShapiroBCUnOccu<-shapiro.test(HS_Avail_BC_widebyDO_TotalDwellingType$Private_dwellings_unoccupied)
+print(shapiroCanUnOccu)
+print(ShapiroBCUnOccu)
+
+```
+Shapiro-Wilk normality test for unoccupied dwellings in Canada gave a p value = 0.0007528
+Shapiro-Wilk normality test for unoccupied dwellings in BC gave a p value = 
+2.239e-05
+
+Both variables do not follow normal distribution. 
+
+Equal Variances: The t-test assumes that the variances of the two groups are equal.
+
+```{r label="VarianceBCCan",echo=FALSE,results='hide'}
+# F-test for equality of variances
+var.test(HS_Avail_Can_widebyDO_TotalDwellingType$Private_dwellings_unoccupied, HS_Avail_BC_widebyDO_TotalDwellingType$Private_dwellings_unoccupied)
+
+```
+The very low p-value indicates strong evidence against the null hypothesis, suggesting that the variances of housing availability in Canada and British Columbia are significantly different. 
+
+### Conclusion based on Hypothesis Tests  
+
+In conclusion, our hypotheses aimed to explore the relationship between housing construction rates and availability in Canada. The Chi-Square test results (p-value = 0.227) suggest no significant association between houses constructed per year and private dwellings occupied by usual residents. The Pearson’s Correlation Coefficient Test indicates a moderately positive correlation (r = 0.6813) but lacks significance (p-value = 0.09193). The T-Test comparing housing availability in Canada and British Columbia reveals a significant difference (p-value = 1.106e-10), supporting our intuition. 
+
+While the correlation analysis implies a positive trend, the absence of significance underscores the complexity of factors influencing housing dynamics, highlighting stochastic relationships and regional variations.
+
+
+## 9. Linear Regression Models
+
+
+Linear regression models are employed to examine trends in housing construction and availability over time and by region.
+
+Using a combined dataset, our key model (Lm_model6) looks at how the number of houses built relates to unoccupied private dwellings and the passing years. 
+
+### 9.2 Linear Regression Model:
+Constructed a linear regression model with the dependent variable being the VALUE(Number of houses constructed in a year) and other  Private_dwellings_unoccupied, Include an interaction term between YEAR and GEO
+
+```{r}
+Lm_model6<-lm(VALUE~ Private_dwellings_unoccupied +YEAR,data=merged_data)
+summary(Lm_model6)
+
+```
+
+Diagnostics [code given in Appendix A]:
+
+The Shapiro-Wilk normality test (p = 0.7155) suggests that the residuals from the linear regression model (Lm_model6) are likely normally distributed. The ncv test (p = 0.28934) indicates homoscedasticity. The Box-Pierce test (p = 0.5645) suggests no significant autocorrelation in the residuals, validating the regression model's assumptions.
+
+In conclusion, the linear regression model (Lm_model6) suggests a strong relationship between the number of houses constructed (VALUE) and the passing years (YEAR), with an Adjusted R-squared of 0.9423. However, the coefficient for unoccupied private dwellings is not statistically significant (p-value = 0.43220). This indicates that while construction rates show a positive trend over time, the impact of unoccupied dwellings on construction is not supported by the data.
+
+
+
+
+
+
+# Conclusion
+
+In summary, our comprehensive analysis of housing construction and availability in Canada from 2009 to 2022 reveals intriguing trends and insights. Visualizations showcase an overall increasing trend in construction rates, while regional variations are evident. Hypothesis testing indicates a lack of significant association between construction rates and dwellings occupied by usual residents, emphasizing the complexity of housing dynamics. Linear regression highlights a strong relationship between construction and passing years, though the impact of unoccupied dwellings appears negligible. These findings collectively underscore the multifaceted nature of Canada's housing landscape.
+
+
+
+
+
+
+# References
+Data Source : 
+
+Canada Mortgage and Housing Corporation, housing under construction
+https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=3410013901
+Housing stock in unit by institutional sector, housing type, dwelling occupation, dwelling type, and tenure type
+https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=3610068801
+
+ADSC 1000 - Class Notes
+
+In Hypothesis testing - cor.test():  https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/cor.test
+
+# Appendix A
+
+
+```{r ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+```
+The Data set Houses Constructed per year:
+```{r,echo=FALSE}
+HS_UndrConstr_wide
+
+```
+Data set for Housing Availability
+```{r}
+head(HS_Availability_TOTOcc)
+```
+
+
+
+Present a smoothed line plot for Private Dwellings Unoccupied Over Time by Province and Country.
+```{r}
+
+ggplot(data = HS_Availability_TOTOcc, aes(x = YEAR, y = Private_dwellings_unoccupied)) +
+  geom_smooth() +
+  facet_wrap(~ GEO) +
+  labs(title = "Private Dwellings Unoccupied Over Time by Province and Country",
+       x = "Year",
+       y = "Private Dwellings Unoccupied") +
+  theme_minimal()
+
+
+
+
+```
+
+
+```{r label="linegraphConstr",echo=FALSE}
+ggplot(HS_UndrConstr, aes(x = YEAR, y = VALUE, color = GEO)) +
+  geom_line() +
+  labs(title = "Houses Constructed Over Time by Province and Country",
+       x = "Year",
+       y = "Value") +
+  theme_minimal()
+```
+The increasing trend in rate of construction and the variations across provinces is evident in the above line graph. 
+
+```{r label="ScatterplotLM"}
+# Create a ggplot scatter plot with a linear regression line
+ggplot(merged_data, aes(x = VALUE, y = Private_dwellings_occupied_by_usual_residents)) +
+  geom_point(color = "blue") +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(title = "Scatter Plot with Linear Regression Line",
+       x = "Number of Houses Constructed",
+       y = "Number of Private Dwellings Occupied by Usual Residents") +
+  theme_minimal()
+```
+
+
+From the scatter plot we can conclude that, there is no deterministic linear relationship , but there could be Linear Stochastic Relationship. In real-world scenarios, many factors can contribute to the variability observed in the data. Stochastic relationships acknowledge that the observed values of variables may deviate from the predicted values due to random fluctuations or uncertainties.
+
+### Assumptions check for cor.test
+
+```{r label="Assumptiosnplotsforcorrtest",echo=FALSE,results='hide'}
+par(mfrow = c(2,2))
+#1.Linearity
+plot(merged_data$VALUE, merged_data$Private_dwellings_occupied_by_usual_residents, main = "Scatter Plot")
+#3.Independence (Assumed)
+#4.Homoscedasticity
+plot(lm(merged_data$VALUE ~ merged_data$Private_dwellings_occupied_by_usual_residents), main = "Residuals vs Fitted")
+
+```
+
+
+
+
+### Diagnostics checks for Lm_model6
+
+```{r}
+
+#linearity check
+plot(Lm_model6$residuals)
+abline(h=0,col="blue")
+
+rst_Lm_model6<-rstandard(Lm_model6)
+
+# test for normality using shapiro wilk test
+shapiro.test(rst_Lm_model6)
+
+#Homoscedasticity Check
+plot(Lm_model6,3)
+library(car)
+ncvTest(Lm_model6)
+
+
+#Independence check
+durbinWatsonTest(Lm_model6)
+
+par(mfrow = c(2,2))
+plot(Lm_model6)
+
+Box.test(Lm_model6$residuals)
+
+```
+### 9.2 Linear Regression Model 1:
+```{r}
+
+
+Lm_model2<- lm(Private_dwellings_unoccupied ~   YEAR:GEO, data = HS_Availability_TOTOcc)
+summary(Lm_model2)
+```
+
+```{r label="Plot4Lm_model2",echo=FALSE,results='hide'}
+par(mfrow = c(2,2))
+plot(Lm_model2)
+
+```
+The model (Private_dwellings_unoccupied ~ YEAR:GEO) has a good fit, as it has a high R-squared value of 0.9856, which means it explains 98.56% of the variation in the response variable. The model is highly significant, as the p-value is less than 2.2e-16, which is much smaller than the common significance level of 0.05. The model coefficients are all significant, as their p-values are all less than 0.01. The model has a small residual standard error of 215300, which means the model predictions are close to the actual values. The model includes an interaction term between YEAR and GEO, which means the effect of YEAR on the response variable depends on the value of GEO.
+
+Interaction effect: The model includes an interaction term between YEAR and GEO, which means the effect of YEAR on the response variable depends on the value of GEO. The plot shows that the slope of the fitted line varies for different levels of GEO, indicating that the relationship between Private_dwellings_unoccupied and YEAR is not the same across different geographic regions.
+Normality and outliers: The plot shows that the residuals are approximately normally distributed, as shown by the Q-Q plot, and have a constant variance, as shown by the scale-location plot. The plot also shows that there are no outliers or influential observations. These indicate that the model meets the assumptions of linear regression and is not affected by any extreme data points.
+```{r}
+
+#linearity check
+plot(Lm_model2$residuals)
+abline(h=0,col="blue")
+
+rst_Lm_model2<-rstandard(Lm_model2)
+
+# test for normality using shapiro wilk test
+shapiro.test(rst_Lm_model2)
+
+#Homoscedasticity Check
+plot(Lm_model2,3)
+library(car)
+ncvTest(Lm_model2)
+
+
+#Independence check
+durbinWatsonTest(Lm_model2)
+
+par(mfrow = c(2,2))
+plot(Lm_model2)
+
+Box.test(Lm_model2$residuals)
+```
+
+As for linearity check from the plot ,the residuals are not randomly scattered around zero and there is an apparent pattern.
+the ncV test indicates a significant violation of homoscedasticity in the linear regression model, as evidenced by a low p-value (1.9345e-08). Second, the Durbin-Watson test detects positive autocorrelation in residuals (p-value = 0.002), challenging the assumption of independence. While the Box-Pierce test suggests no significant autocorrelation at lag 1 (p-value = 0.5788)
+### 9.3 Linear Regression Model 2:
+Constructed a linear regression model with the dependent variable being the Private_dwellings_unoccupied, and YEAR and GEO,Included an interaction term between YEAR and GEO
+
+```{r}
+
+Lm_model3<- lm(Private_dwellings_unoccupied ~ + YEAR+ GEO + YEAR:GEO, data = HS_Availability_TOTOcc)
+summary(Lm_model3)
+
+
+par(mfrow = c(2,2))
+plot(Lm_model3)
+names(HS_Availability_TOTOcc)
+
+```
+
+```{r}
+
+#linearity check
+plot(Lm_model3$residuals)
+abline(h=0,col="blue")
+
+rst_Lm_model3<-rstandard(Lm_model3)
+
+# test for normality using shapiro wilk test
+shapiro.test(rst_Lm_model3)
+
+#Homoscedasticity Check
+plot(Lm_model3,3)
+library(car)
+ncvTest(Lm_model3)
+
+
+#Independence check
+durbinWatsonTest(Lm_model3)
+
+par(mfrow = c(2,2))
+plot(Lm_model3)
+
+Box.test(Lm_model3$residuals)
+```
+Despite a strong R-squared value (e.g., 0.9784) indicating high explained variability, if a linear regression model exhibits patterns near zero, it suggests a violation of linearity. This challenges the accuracy of the model.
+
+### 9.3 Linear Regression Model 3:
+Constructed a linear regression model with the dependent variable being VALUE(Number of houses under construction in a year), Included an interaction term between YEAR and GEO
+
+```{r}
+Lm_model4<-lm(VALUE~ YEAR:GEO,data=HS_UndrConstr)
+summary(Lm_model4)
+
+
+par(mfrow = c(2,2))
+plot(Lm_model4)
+```
+Good fit: The model has a high R-squared value of 0.9702, which means it explains 97.02% of the variation in the response variable. The model is highly significant, as the p-value is less than 2.2e-16, which is much smaller than the common significance level of 0.05. The model coefficients are all significant, as their p-values are all less than 0.001. The model has a small residual standard error of 72690, which means the model predictions are close to the actual values.
+
+Interaction effect: The model includes an interaction term between YEAR and GEO, which means the effect of YEAR on the response variable depends on the value of GEO. The plot shows that the slope of the fitted line varies for different levels of GEO, indicating that the relationship between VALUE and YEAR is not the same across different geographic regions.
+
+Normality and outliers: The plot shows that the residuals are approximately normally distributed, as shown by the Q-Q plot, and have a constant variance, as shown by the scale-location plot. The plot also shows that there are no outliers or influential observations. These indicate that the model meets the assumptions of linear regression and is not affected by any extreme data points.
+```{r}
+
+
+
+#linearity check
+plot(Lm_model4$residuals)
+abline(h=0,col="blue")
+
+rst_Lm_model4<-rstandard(Lm_model4)
+
+# test for normality using shapiro wilk test
+shapiro.test(rst_Lm_model4)
+
+#Homoscedasticity Check
+plot(Lm_model4,3)
+library(car)
+ncvTest(Lm_model4)
+
+
+#Independence check
+durbinWatsonTest(Lm_model4)
+
+par(mfrow = c(2,2))
+plot(Lm_model4)
+
+Box.test(Lm_model4$residuals)
+
+```
+### 9.4 Linear Regression Model 4:
+Constructed a linear regression model with the dependent variable being VALUE and other variables YEAR and GEO and Included an interaction term between YEAR and GEO
+
+```{r}
+Lm_model5<-lm(VALUE~ YEAR:GEO +YEAR+GEO,data=HS_UndrConstr)
+summary(Lm_model5)
+
+#linearity check
+plot(Lm_model5$residuals)
+abline(h=0,col="blue")
+
+rst_Lm_model5<-rstandard(Lm_model5)
+
+# test for normality using shapiro wilk test
+shapiro.test(rst_Lm_model5)
+
+#Homoscedasticity Check
+plot(Lm_model5,3)
+library(car)
+ncvTest(Lm_model5)
+
+
+#Independence check
+durbinWatsonTest(Lm_model5)
+
+par(mfrow = c(2,2))
+plot(Lm_model5)
+
+Box.test(Lm_model5$residuals)
+
+
+```
+```{r}
+Lm_model6<-lm(VALUE~ Private_dwellings_unoccupied +YEAR,data=merged_data)
+summary(Lm_model6)
+
+```
+
+### 9.5 Linear Regression Model 5:
+Constructed a linear regression model with the dependent variable being Private_dwellings_unoccupied and other variables YEAR and VALUE 
+```{r}
+Lm_model7<-lm(Private_dwellings_unoccupied ~ VALUE+YEAR,data=merged_data)
+summary(Lm_model7)
+```
+```{r}
+#linearity check
+plot(Lm_model7$residuals)
+abline(h=0,col="blue")
+
+rst_Lm_model7<-rstandard(Lm_model7)
+
+# test for normality using shapiro wilk test
+shapiro.test(rst_Lm_model7)
+
+#Homoscedasticity Check
+plot(Lm_model7,3)
+library(car)
+ncvTest(Lm_model7)
+
+
+#Independence check
+durbinWatsonTest(Lm_model7)
+
+par(mfrow = c(2,2))
+plot(Lm_model7)
+
+Box.test(Lm_model7$residuals)
+```
+```{r}
+
+AIC(Lm_model6)
+BIC(Lm_model6)
+
+AIC(Lm_model7)
+BIC(Lm_model7)
+
+
+```
+
+
+# Appendix B
+
+In our project, the collaborative efforts of Amrita, Anupama and Sarab have been instrumental. We all have made substantial contributions across all project facets. From data selection to coding, report writing, and collaborative creation of the presentation on Google Slides, each member showcased versatility.
+
+
+
+
+
+
