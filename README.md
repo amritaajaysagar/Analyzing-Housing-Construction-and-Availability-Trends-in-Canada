@@ -1,5 +1,5 @@
 # Analyzing Housing Construction and Availability Trends in Canada
-### Amrita Ajay Sagar , Anupama Chalil Velluva , and Sarab Nidhaan Singh 
+### Amrita Ajay Sagar , Anupama Chalil Velluva and Sarab Nidhaan Singh 
 ### November 28, 2023
 
 This project aims to examine the trends and patterns of housing construction and availability in Canada, using data from 2009 to 2022. The data is obtained from Statistics Canada, a reliable source of official statistics on various aspects of the country. The data allows us to explore the complex interplay between the supply and demand of housing units.
