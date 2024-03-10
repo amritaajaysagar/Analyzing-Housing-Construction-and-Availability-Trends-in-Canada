@@ -1,9 +1,9 @@
 ---
 title: "Analyzing Housing Construction and Availability Trends in Canada"
 author:
-  - "Amrita Ajay Sagar (T00733775)"
-  - "Anupama Chalil Velluva (T00728437)"
-  - "Sarab Nidhaan Singh (T00735745)"
+  - "Amrita Ajay Sagar "
+  - "Anupama Chalil Velluva "
+  - "Sarab Nidhaan Singh "
 date: "2023-11-28"
 output:
   pdf_document: 
